@@ -3,11 +3,13 @@ import { Search, Filter, AlertCircle, RefreshCw, ArrowUpDown } from 'lucide-reac
 import { VirtuosoGrid } from 'react-virtuoso';
 import debounce from 'lodash.debounce';
 import { useSkills } from '../context/SkillContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { SkillCard } from '../components/SkillCard';
 import type { SyncMessage, CategoryStats } from '../types';
 
 export function Home(): React.ReactElement {
   const { skills, stars, loading, refreshSkills } = useSkills();
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -74,7 +76,7 @@ export function Home(): React.ReactElement {
 
   const handleSync = async () => {
     if (isStaticPages) {
-      setSyncMsg({ type: 'info', text: 'ℹ️ Static GitHub Pages deploys sync via GitHub Actions.' });
+      setSyncMsg({ type: 'info', text: t('static_pages_info') });
       setTimeout(() => setSyncMsg(null), 5000);
       return;
     }
@@ -85,9 +87,9 @@ export function Home(): React.ReactElement {
       const data = await res.json();
       if (data.success) {
         if (data.upToDate) {
-          setSyncMsg({ type: 'info', text: 'ℹ️ Skills are already up to date!' });
+          setSyncMsg({ type: 'info', text: t('already_up_to_date') });
         } else {
-          setSyncMsg({ type: 'success', text: `✅ Synced ${data.count} skills!` });
+          setSyncMsg({ type: 'success', text: t('synced_count', { count: data.count }) });
           await refreshSkills();
         }
       } else {
@@ -106,8 +108,8 @@ export function Home(): React.ReactElement {
       <div className="space-y-8 mb-8">
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">Explore Skills</h1>
-            <p className="text-slate-500 dark:text-slate-400">Discover {skills.length} agentic capabilities for your AI assistant.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">{t('explore_skills')}</h1>
+            <p className="text-slate-500 dark:text-slate-400">{t('discover_capabilities', { count: skills.length })}</p>
           </div>
           <div className="flex items-center gap-3">
             {syncMsg && (
@@ -126,7 +128,7 @@ export function Home(): React.ReactElement {
               className="flex items-center space-x-2 px-4 py-2.5 rounded-lg font-medium text-sm bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-wait transition-colors shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{isStaticPages ? 'Updated via Actions' : syncing ? 'Syncing...' : 'Sync Skills'}</span>
+              <span>{isStaticPages ? t('updated_via_actions') : syncing ? t('syncing') : t('sync_skills')}</span>
             </button>
           </div>
         </div>
@@ -136,8 +138,8 @@ export function Home(): React.ReactElement {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
-              placeholder="Search skills (e.g., 'react', 'security', 'python')..."
-              aria-label="Search skills"
+              placeholder={t('search_placeholder')}
+              aria-label={t('search_placeholder')}
               className="w-full rounded-md border border-slate-200 bg-slate-50 px-9 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -146,7 +148,7 @@ export function Home(): React.ReactElement {
           <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
             <Filter className="h-4 w-4 text-slate-500 shrink-0" />
             <select
-              aria-label="Filter by category"
+              aria-label={t('search_placeholder')}
               className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 min-w-[150px]"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -154,23 +156,23 @@ export function Home(): React.ReactElement {
               {categories.map(cat => (
                 <option key={cat} value={cat}>
                   {cat === 'all'
-                    ? 'All Categories'
-                    : `${cat.charAt(0).toUpperCase() + cat.slice(1)} (${categoryStats[cat] || 0})`
+                    ? t('all_categories')
+                    : t('category_with_count', { category: cat.charAt(0).toUpperCase() + cat.slice(1), count: categoryStats[cat] || 0 })
                   }
                 </option>
               ))}
             </select>
             <ArrowUpDown className="h-4 w-4 text-slate-500 shrink-0 ml-2" />
             <select
-              aria-label="Sort skills"
+              aria-label={t('search_placeholder')}
               className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 min-w-[130px]"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="default">Default</option>
-              <option value="stars">⭐ Most Stars</option>
-              <option value="newest">🆕 Newest</option>
-              <option value="az">🔤 A → Z</option>
+              <option value="default">{t('default')}</option>
+              <option value="stars">{t('most_stars')}</option>
+              <option value="newest">{t('newest')}</option>
+              <option value="az">{t('a_to_z')}</option>
             </select>
           </div>
         </div>
@@ -187,8 +189,8 @@ export function Home(): React.ReactElement {
         ) : filteredSkills.length === 0 ? (
           <div className="py-12 text-center px-4 sm:px-6 lg:px-8">
             <AlertCircle className="mx-auto h-12 w-12 text-slate-400" />
-            <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">No skills found</h3>
-            <p className="mt-2 text-slate-500 dark:text-slate-400">Try adjusting your search or filter.</p>
+            <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-slate-100">{t('no_skills_found')}</h3>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">{t('adjust_search_or_filter')}</p>
           </div>
         ) : (
           <VirtuosoGrid
