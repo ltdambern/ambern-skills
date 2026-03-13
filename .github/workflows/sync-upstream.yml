@@ -1,0 +1,53 @@
+name: Sync Upstream Repo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Add upstream
+        run: |
+          git remote add upstream https://github.com/sickn33/antigravity-awesome-skills.git || true
+          git fetch upstream main
+
+      - name: Sync from upstream
+        run: |
+          git checkout main
+          git reset --hard upstream/main
+
+      - name: Apply static Pages patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('apps/web-app/src/pages/Home.tsx')
+          s = p.read_text()
+          old = """  const handleSync = async () => {\n    setSyncing(true);\n    setSyncMsg(null);\n    try {\n      const res = await fetch('/api/refresh-skills');\n      const data = await res.json();\n      if (data.success) {\n        if (data.upToDate) {\n          setSyncMsg({ type: 'info', text: 'ℹ️ Skills are already up to date!' });\n        } else {\n          setSyncMsg({ type: 'success', text: `✅ Synced ${data.count} skills!` });\n          await refreshSkills();\n        }\n      } else {\n        setSyncMsg({ type: 'error', text: `❌ ${data.error}` });\n      }\n    } catch (err) {\n      setSyncMsg({ type: 'error', text: '❌ Network error' });\n    } finally {\n      setSyncing(false);\n      setTimeout(() => setSyncMsg(null), 5000);\n    }\n  };\n"""
+          new = """  const isStaticPages = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io');\n\n  const handleSync = async () => {\n    if (isStaticPages) {\n      setSyncMsg({ type: 'info', text: 'ℹ️ Static GitHub Pages deploys sync via GitHub Actions.' });\n      setTimeout(() => setSyncMsg(null), 5000);\n      return;\n    }\n    setSyncing(true);\n    setSyncMsg(null);\n    try {\n      const res = await fetch('/api/refresh-skills');\n      const data = await res.json();\n      if (data.success) {\n        if (data.upToDate) {\n          setSyncMsg({ type: 'info', text: 'ℹ️ Skills are already up to date!' });\n        } else {\n          setSyncMsg({ type: 'success', text: `✅ Synced ${data.count} skills!` });\n          await refreshSkills();\n        }\n      } else {\n        setSyncMsg({ type: 'error', text: `❌ ${data.error}` });\n      }\n    } catch (err) {\n      setSyncMsg({ type: 'error', text: '❌ Network error' });\n    } finally {\n      setSyncing(false);\n      setTimeout(() => setSyncMsg(null), 5000);\n    }\n  };\n"""
+          s = s.replace(old, new)
+          s = s.replace("<span>{syncing ? 'Syncing...' : 'Sync Skills'}</span>", "<span>{isStaticPages ? 'Updated via Actions' : syncing ? 'Syncing...' : 'Sync Skills'}</span>")
+          p.write_text(s)
+          PY
+
+      - name: Commit and push if changed
+        run: |
+          git add .github/workflows/sync-upstream.yml apps/web-app/src/pages/Home.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: sync upstream and preserve static GitHub Pages mode"
+          git push origin main

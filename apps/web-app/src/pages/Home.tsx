@@ -70,7 +70,14 @@ export function Home(): React.ReactElement {
     return { categories: cats, categoryStats: stats };
   }, [skills]);
 
+  const isStaticPages = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io');
+
   const handleSync = async () => {
+    if (isStaticPages) {
+      setSyncMsg({ type: 'info', text: 'ℹ️ Static GitHub Pages deploys sync via GitHub Actions.' });
+      setTimeout(() => setSyncMsg(null), 5000);
+      return;
+    }
     setSyncing(true);
     setSyncMsg(null);
     try {
@@ -119,7 +126,7 @@ export function Home(): React.ReactElement {
               className="flex items-center space-x-2 px-4 py-2.5 rounded-lg font-medium text-sm bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 disabled:cursor-wait transition-colors shadow-sm"
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{syncing ? 'Syncing...' : 'Sync Skills'}</span>
+              <span>{isStaticPages ? 'Updated via Actions' : syncing ? 'Syncing...' : 'Sync Skills'}</span>
             </button>
           </div>
         </div>
