@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { SkillDetail } from './pages/SkillDetail';
-import { BookOpen, Github, Globe } from 'lucide-react';
+import { MeuArsenal } from './pages/MeuArsenal';
+import { BookOpen, Github, Globe, Compass } from 'lucide-react';
 import { useLanguage } from './i18n/LanguageContext';
 
 function AppContent(): React.ReactElement {
@@ -17,6 +18,13 @@ function AppContent(): React.ReactElement {
           </Link>
           <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
             <nav className="flex items-center space-x-6 text-sm font-medium">
+              <Link 
+                to="/meu-arsenal"
+                className="flex items-center text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-50"
+              >
+                <Compass className="h-5 w-5 mr-2" />
+                Meu Arsenal
+              </Link>
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                 <button
@@ -58,6 +66,7 @@ function AppContent(): React.ReactElement {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/skill/:id" element={<SkillDetail />} />
+          <Route path="/meu-arsenal" element={<MeuArsenal />} />
         </Routes>
       </main>
     </div>
